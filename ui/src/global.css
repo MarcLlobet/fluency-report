@@ -1,0 +1,22 @@
+:root {
+  --color-grey: #B1BCBB;
+  --color-green: #84D65C;
+  --color-red: #FF5233;
+  --color-dark-grey: #333333;
+  --color-white: #FFFFFF;
+  ;
+}
+
+@font-face {
+  font-family: "Roboto";
+  src: url("https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxP.ttf") format("truetype");
+}
+
+body {
+  margin: 64px 24px;
+  font-family: "Roboto", system-ui, sans-serif;
+  color: var(--color-dark-grey);
+  background-color: var(--color-white);
+}
+
+
