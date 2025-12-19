@@ -3,7 +3,7 @@ import { useMemo } from "react";
 
 import CellFluency from "./cell-fluency";
 import type { Attempt } from "./fluency-dashboard";
-import { calculateTableSummaries } from "../logic/calculateTableSummaries";
+import { calculateTableSummaries, type SecondOperand } from "../logic/calculateTableSummaries";
 import { MAX_OPERAND } from "../constants";
 
 const Table = styled.table`
@@ -42,13 +42,20 @@ type Props = {
 
 const operandsList = Array.from({length: MAX_OPERAND}, (_, i) => i + 1);
 
+const getCellStatus = ({
+  isMostlyFailed,
+  isInProgress
+}: SecondOperand): "notSeen" | "inProgress" | "mostlyFailed" => {
+  if (isMostlyFailed) {
+    return "mostlyFailed";
+  }
+  return isInProgress ? "inProgress" : "notSeen";
+}
 function ProgressTable({ attempts }: Props): React.ReactNode {
   const tableSummaries = useMemo(
     () => calculateTableSummaries(attempts),
     [attempts]
   );
-
-  console.log("Table Summaries:", tableSummaries);
 
   return (
     <Table>
@@ -67,11 +74,7 @@ function ProgressTable({ attempts }: Props): React.ReactNode {
             {summary.secondOperands.map((secondOperand) => (
               <TableCell key={secondOperand.key}>
                 <CellFluency
-                  status={secondOperand.isMostlyFailed
-                    ? "mostlyFailed"
-                    : secondOperand.isInProgress
-                    ? "inProgress"
-                    : "notSeen"}
+                  status={getCellStatus(secondOperand)}
                   variant="cell-small-size"
                 />
               </TableCell>

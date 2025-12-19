@@ -31,7 +31,6 @@ describe('calculateTableSummaries', () => {
       "isMostlyFailed": false,
       "key": "2x3",
       "secondOperand": 3,
-      "studentsWithDifficulties": 2,
     });
   });
 
@@ -50,7 +49,6 @@ describe('calculateTableSummaries', () => {
       "isMostlyFailed": false,
       "key": "2x3",
       "secondOperand": 3,
-      "studentsWithDifficulties": null,
     });
   });
 

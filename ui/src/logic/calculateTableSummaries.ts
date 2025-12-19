@@ -1,11 +1,10 @@
 import type { Attempt } from "../components/fluency-dashboard";
 import { MAX_OPERAND } from "../constants";
 
-type SecondOperand = {
+export type SecondOperand = {
   key: string;
   secondOperand: number;
   isInProgress: boolean;
-  studentsWithDifficulties: number | null;
   isMostlyFailed: boolean;
 }
 
@@ -14,93 +13,73 @@ type NewTableSummary = {
     secondOperands: SecondOperand[]
 };
 
+type AttemptsByOperand = Map<number, Attempt[]>;
+
 export function calculateTableSummaries(attempts: Attempt[]): NewTableSummary[] {
-  const summaries: NewTableSummary[] = [];
+  
 
-  // Per cada taula de multiplicar (1-12)
-  for (let firstOperand = 1; firstOperand <= MAX_OPERAND; firstOperand++) {
-    // Filtrar intents per aquesta taula (firstOperand)
-    const firstOperandAttempts = attempts.filter((a) => a.firstOperand === firstOperand);
+  const attemptsByFirstOperand = Map.groupBy(
+    attempts, 
+    ({ firstOperand }) => firstOperand
+  );
 
-    for (let secondOperand = 1; secondOperand <= MAX_OPERAND; secondOperand++) {
-      const tableAttempts = firstOperandAttempts.filter((a) => a.secondOperand === secondOperand);
+  const attemptsByOperands = Array.from(attemptsByFirstOperand.entries())
+    .reduce((prev, [firstOperand, firstOperandAttempts]) => 
+      new Map([
+        ...prev.entries(),
+        [
+          firstOperand,
+          Map.groupBy(
+            firstOperandAttempts,
+            ({ secondOperand }) => secondOperand
+          ) as AttemptsByOperand
+        ]
+      ]),
+    new Map<number, AttemptsByOperand>()
+  );
 
-      const firstOperandSummary = summaries.find(s => s.firstOperand === firstOperand);
+  const failedLastAttempts = Array.from(attemptsByOperands.values())
+  .map((attemptsByFirstOperand) => 
+    Array.from(attemptsByFirstOperand.values())
+    .map((attemptsBySecondOperand) => {
+      const attemptsByStudent = Object.groupBy(attemptsBySecondOperand, ({ studentUuid }) => studentUuid) as Record<string, Attempt[]>;
 
-      if(tableAttempts.length === 0) {
-        // No hi ha intents per aquesta taula
-        if(!firstOperandSummary) {
-          summaries.push({
-            firstOperand,
-            secondOperands: [
-              {
-                key: `${firstOperand}x${secondOperand}`,
-                secondOperand,
-                isInProgress: false,
-                studentsWithDifficulties: null,
-                isMostlyFailed: false,
-              },
-            ],
-          });
-          } else {
-            firstOperandSummary.secondOperands.push({
-              key: `${firstOperand}x${secondOperand}`,
-              secondOperand,
-              isInProgress: false,
-              studentsWithDifficulties: null,
-              isMostlyFailed: false,
-            });
-        }
-        continue;
-      };
+      const studentAttempts = Object.values(attemptsByStudent)
 
-      // Agrupar per alumne
-      const attemptsByStudent = new Map<string, Attempt[]>();
-      for (const attempt of tableAttempts) {
-        const studentAttempts = attemptsByStudent.get(attempt.studentUuid) || [];
-        studentAttempts.push(attempt);
-        attemptsByStudent.set(attempt.studentUuid, studentAttempts);
-      }
-
-      // Comptar alumnes amb dificultats (últim intent incorrecte)
-      let studentsWithDifficulties = 0;
-      for (const [, studentAttempts] of attemptsByStudent) {
-        // Ordenar per attemptedAt descendent i agafar l'últim
-        const sortedAttempts = studentAttempts.sort(
+      const sortedAttempts = studentAttempts
+        .map(attempts => attempts.sort(
           (a, b) =>
             new Date(b.attemptedAt).getTime() - new Date(a.attemptedAt).getTime()
-        );
-        const lastAttempt = sortedAttempts[0];
+        ));
+      const failedAttempts = sortedAttempts.filter(attemptsByStudent => {
+          const [latestAttempt] = attemptsByStudent
+          return !latestAttempt.correct
+        })
 
-        if (!lastAttempt.correct) {
-          studentsWithDifficulties++;
-        }
+      return failedAttempts.length > (studentAttempts.length / 2)
+    })
+  );
+
+  const twelveList = Array.from({length: MAX_OPERAND}, (_, f) => f + 1)
+
+  const tableSummary = twelveList.map((firstOperand, firstOperandIndex) => ({
+    firstOperand,
+    secondOperands: twelveList.map((secondOperand, secondOperandIndex) => {
+      const isMostlyFailed = !!failedLastAttempts?.[firstOperandIndex]?.[secondOperandIndex]
+
+      const hasAttempts = !!attemptsByOperands
+          ?.get(firstOperand)
+          ?.get(secondOperand)
+          ?.length;
+
+      return {
+        key: `${firstOperand}x${secondOperand}`,
+        secondOperand,
+        isMostlyFailed: hasAttempts && isMostlyFailed,
+        isInProgress: hasAttempts && !isMostlyFailed,
       }
+    })
+  }));
 
-      if(!firstOperandSummary) {
-        summaries.push({
-          firstOperand,
-          secondOperands: [
-            {
-              key: `${firstOperand}x${secondOperand}`,
-              secondOperand,
-              isInProgress: true,
-              studentsWithDifficulties,
-              isMostlyFailed: studentsWithDifficulties > (tableAttempts.length / 2),
-            },
-          ],
-        });
-      } else {
-        firstOperandSummary.secondOperands.push({
-          key: `${firstOperand}x${secondOperand}`,
-          secondOperand,
-          isInProgress: true,
-          studentsWithDifficulties,
-          isMostlyFailed: studentsWithDifficulties > (tableAttempts.length / 2),
-        });
-      }
-    }
-  }
-
-  return summaries;
+  return tableSummary;
 }
