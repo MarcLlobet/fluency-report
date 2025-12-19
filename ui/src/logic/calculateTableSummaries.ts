@@ -15,9 +15,7 @@ type NewTableSummary = {
 
 type AttemptsByOperand = Map<number, Attempt[]>;
 
-export function calculateTableSummaries(attempts: Attempt[]): NewTableSummary[] {
-  
-
+export const calculateTableSummaries = (attempts: Attempt[]): NewTableSummary[] => {
   const attemptsByFirstOperand = Map.groupBy(
     attempts, 
     ({ firstOperand }) => firstOperand
@@ -38,34 +36,52 @@ export function calculateTableSummaries(attempts: Attempt[]): NewTableSummary[] 
     new Map<number, AttemptsByOperand>()
   );
 
-  const failedLastAttempts = Array.from(attemptsByOperands.values())
-  .map((attemptsByFirstOperand) => 
-    Array.from(attemptsByFirstOperand.values())
-    .map((attemptsBySecondOperand) => {
-      const attemptsByStudent = Object.groupBy(attemptsBySecondOperand, ({ studentUuid }) => studentUuid) as Record<string, Attempt[]>;
+  const failedLastAttempts = Array.from(attemptsByOperands.entries())
+  .reduce((prevFirst, [firstOperand, attemptsByFirstOperand]) => new Map([
+      ...prevFirst.entries(),
+      [
+        firstOperand,
+        Array.from(attemptsByFirstOperand.entries())
+        .reduce((prevSecond, [secondOperand, attemptsBySecondOperand]) => {
+          const attemptsByStudent = Object.groupBy(attemptsBySecondOperand, ({ studentUuid }) => studentUuid) as Record<string, Attempt[]>;
 
-      const studentAttempts = Object.values(attemptsByStudent)
+          const studentAttempts = Object.values(attemptsByStudent)
 
-      const sortedAttempts = studentAttempts
-        .map(attempts => attempts.sort(
-          (a, b) =>
-            new Date(b.attemptedAt).getTime() - new Date(a.attemptedAt).getTime()
-        ));
-      const failedAttempts = sortedAttempts.filter(attemptsByStudent => {
-          const [latestAttempt] = attemptsByStudent
-          return !latestAttempt.correct
-        })
+          const lastAttempts = studentAttempts.map(attempts => 
+            attempts.reduce((prevAttempt, attempt) => 
+              prevAttempt.attemptedAt >= attempt.attemptedAt
+                ? prevAttempt
+                : attempt
+              , { attemptedAt: 0 } as unknown as Attempt
+            )
+          );
 
-      return failedAttempts.length > (studentAttempts.length / 2)
-    })
+          const failedAttempts = lastAttempts.filter(attemptByStudent => 
+            !attemptByStudent.correct
+          );
+
+          const isMostlyFailed = failedAttempts.length > (studentAttempts.length / 2)
+
+          return new Map([
+            ...prevSecond.entries(),
+            [
+              secondOperand,
+              isMostlyFailed
+            ]
+          ])
+        }, new Map<number, boolean>())
+      ]
+    ]), new Map<number, Map<number, boolean>>()
   );
 
   const twelveList = Array.from({length: MAX_OPERAND}, (_, f) => f + 1)
 
-  const tableSummary = twelveList.map((firstOperand, firstOperandIndex) => ({
+  const tableSummary = twelveList.map((firstOperand) => ({
     firstOperand,
-    secondOperands: twelveList.map((secondOperand, secondOperandIndex) => {
-      const isMostlyFailed = !!failedLastAttempts?.[firstOperandIndex]?.[secondOperandIndex]
+    secondOperands: twelveList.map((secondOperand) => {
+      const isMostlyFailed = !!failedLastAttempts
+          ?.get(firstOperand)
+          ?.get(secondOperand);
 
       const hasAttempts = !!attemptsByOperands
           ?.get(firstOperand)

@@ -27,10 +27,10 @@ describe('calculateTableSummaries', () => {
     const secondOperandSummary = firstOperandSummary?.secondOperands.find(s => s.secondOperand === 3);
 
     expect(secondOperandSummary).toEqual({
-      "isInProgress": true,
-      "isMostlyFailed": false,
-      "key": "2x3",
-      "secondOperand": 3,
+      isInProgress: false,
+      isMostlyFailed: true,
+      key: "2x3",
+      secondOperand: 3,
     });
   });
 
@@ -45,10 +45,10 @@ describe('calculateTableSummaries', () => {
     const secondOperandSummary = firstOperandSummary?.secondOperands.find(s => s.secondOperand === 3);
 
     expect(secondOperandSummary).toEqual({
-      "isInProgress": false,
-      "isMostlyFailed": false,
-      "key": "2x3",
-      "secondOperand": 3,
+      isInProgress: false,
+      isMostlyFailed: false,
+      key: "2x3",
+      secondOperand: 3,
     });
   });
 
@@ -62,9 +62,9 @@ describe('calculateTableSummaries', () => {
     const firstOperandSummary = summaries.find(s => s.firstOperand === 2);
 
     expect(firstOperandSummary).toEqual({
-      "firstOperand": 2,
+      firstOperand: 2,
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      "secondOperands": expect.any(Array),
+      secondOperands: expect.any(Array),
     });
   });
 });
