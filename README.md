@@ -37,3 +37,30 @@ The possible statuses are:
 - In Progress: There are some attempts and it's not _Failed_
 
 We also want a filter to be able to filter by dates. The dropdown should have options for _All time_, _Past month_, and _Current week_.
+
+
+
+## Tech solution
+
+The UI is built with React and Vite, using Emotion for styling. Data processing in the frontend follows a functional paradigm: pure functions, `useMemo` for memoization, and utilities like `Map.groupBy` and `Object.groupBy` are used to transform and group student attempts without mutating the original state. This approach ensures efficient, predictable state management and enables fast rendering of the results table and date filters.
+
+**Frontend technical highlights:**
+- Functional programming for data transformation: summaries, grouping, and filtering are done immutably.
+- Render optimization with `useMemo` and decoupled components.
+- Date filter dropdown and efficient rendering of a 12x12 matrix table.
+
+### Get your BE ready
+1. `make fixtures`
+2. `make start-api`
+
+### How to start the Frontend
+
+Start the frontend development server:
+```bash
+	cd ui
+	npm run dev
+	# Access the UI at http://localhost:5173 (default Vite port)
+```
+
+### Unit tests
+Run: `npm run test`.
