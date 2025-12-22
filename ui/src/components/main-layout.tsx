@@ -1,7 +1,10 @@
 import styled from "@emotion/styled";
 import { TitleHeader } from "./title-header";
 import FluencyDatePeriodDropdown from "./fluency-date-period-dropdown";
-import FluencyDashboard from "./fluency-dashboard";
+import FluencyDashboard, { type Attempt } from "./fluency-dashboard";
+import { useCallback, useEffect, useState } from "react";
+import { type DateOptionsType } from "../logic/dateFilter";
+import { DATE_OPTIONS } from "../constants";
 
 const Container = styled.div`
   display: flex;
@@ -18,15 +21,33 @@ const StudentsInfoWrapper = styled.div`
 `;
 
 export function MainLayout(): React.ReactNode {
+  const [allAttempts, setAllAttempts] = useState<Attempt[]>([] as Attempt[]);
+  const [date, setDate] = useState<DateOptionsType>(DATE_OPTIONS.all_time);
+
+  const onChange = useCallback((value: DateOptionsType) => {
+    setDate(value);
+  }, []);
+
+  useEffect(() => {
+    fetch("http://localhost:8080/attempts")
+      .then((response) => response.json())
+      .then((attempts: Attempt[]) => {
+        setAllAttempts(attempts);
+      })
+      .catch((error) => {
+        console.error("Error getting data from API:", error);
+      });
+  }, []);
+
   return (
     <Container>
       <TitleHeader
-        title="Fluidez"
-        description="Es un espacio dentro de la Práctica Individualizada pensado para consolidar y automatizar las operaciones aritméticas básicas."
+        title="Fluency report"
+        description="It is a space within Individualized Practice designed to consolidate and automate basic arithmetic operations."
       />
       <StudentsInfoWrapper>
-        <FluencyDatePeriodDropdown />
-        <FluencyDashboard />
+        <FluencyDatePeriodDropdown selectedOption={date} onChange={onChange} />
+        <FluencyDashboard date={date} attempts={allAttempts} />
       </StudentsInfoWrapper>
     </Container>
   );

@@ -13,9 +13,10 @@ type NewTableSummary = {
     secondOperands: SecondOperand[]
 };
 
-type AttemptsByOperand = Map<number, Attempt[]>;
-
-export const calculateTableSummaries = (attempts: Attempt[]): NewTableSummary[] => {
+const getAttemptsByOperands = (attempts: Attempt[]): Map<
+  number, 
+  Map<number, Attempt[]>
+> => {
   const attemptsByFirstOperand = Map.groupBy(
     attempts, 
     ({ firstOperand }) => firstOperand
@@ -30,11 +31,17 @@ export const calculateTableSummaries = (attempts: Attempt[]): NewTableSummary[] 
           Map.groupBy(
             firstOperandAttempts,
             ({ secondOperand }) => secondOperand
-          ) as AttemptsByOperand
+          )
         ]
       ]),
-    new Map<number, AttemptsByOperand>()
+    new Map<number, Map<number, Attempt[]>>()
   );
+
+  return attemptsByOperands;
+}
+
+export const calculateTableSummaries = (attempts: Attempt[]): NewTableSummary[] => {
+  const attemptsByOperands = getAttemptsByOperands(attempts);
 
   const failedLastAttempts = Array.from(attemptsByOperands.entries())
   .reduce((prevFirst, [firstOperand, attemptsByFirstOperand]) => new Map([
@@ -45,10 +52,10 @@ export const calculateTableSummaries = (attempts: Attempt[]): NewTableSummary[] 
         .reduce((prevSecond, [secondOperand, attemptsBySecondOperand]) => {
           const attemptsByStudent = Object.groupBy(attemptsBySecondOperand, ({ studentUuid }) => studentUuid) as Record<string, Attempt[]>;
 
-          const studentAttempts = Object.values(attemptsByStudent)
+          const studentAttempts = Object.values(attemptsByStudent);
 
           const lastAttempts = studentAttempts.map(attempts => 
-            attempts.reduce((prevAttempt, attempt) => 
+            attempts.reduce((prevAttempt, attempt) =>
               prevAttempt.attemptedAt >= attempt.attemptedAt
                 ? prevAttempt
                 : attempt

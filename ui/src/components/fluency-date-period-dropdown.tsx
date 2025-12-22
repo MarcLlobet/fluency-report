@@ -3,8 +3,11 @@ import ReactSelect, {
   type StylesConfig,
   components,
   type DropdownIndicatorProps,
+  type SingleValue,
 } from "react-select";
 import { ExpandMoreIcon } from "./expand-more-icon";
+import { DATE_OPTIONS_LABEL } from "../constants";
+import type { DateOptionsType } from "../logic/dateFilter";
 
 const FluencyDatePeriodDropdownWrapper = styled.div`
   display: flex;
@@ -96,20 +99,39 @@ const DropdownIndicator = (
   );
 };
 
-function FluencyDatePeriodDropdown(): React.ReactNode {
-  const defaultOption: OptionType = { value: "", label: "Todo" };
+const options: OptionType[] = Object.entries(DATE_OPTIONS_LABEL)
+    .map(([value, label]) => ({ value, label }));
+
+const optionsByValue = Object.groupBy(options, ({value}) => value as DateOptionsType) as Record<DateOptionsType, OptionType[]>
+
+const [defaultOption] = options;
+
+function FluencyDatePeriodDropdown({ selectedOption, onChange }: { 
+  selectedOption: DateOptionsType
+  onChange: (value: DateOptionsType) => void }
+): React.ReactNode {
+
+  const [selectedValue] = optionsByValue[selectedOption]
+
+  const handleChange = (newOption: SingleValue<OptionType>): void => {
+    onChange(newOption?.value as DateOptionsType);
+  }
 
   return (
     <FluencyDatePeriodDropdownWrapper>
-      <Label htmlFor="date-period-select">Seleccionar fechas</Label>
+      <Label htmlFor="date-period-select">Select date</Label>
       <SelectWrapper>
         <ReactSelect
           inputId="date-period-select"
           defaultValue={defaultOption}
-          options={[defaultOption]}
+          value={selectedValue}
+          options={options}
+          getOptionLabel={option => option.label}
+          getOptionValue={option => option.value}
           styles={customStyles}
           components={{ DropdownIndicator }}
           isSearchable={false}
+          onChange={handleChange}
         />
       </SelectWrapper>
     </FluencyDatePeriodDropdownWrapper>

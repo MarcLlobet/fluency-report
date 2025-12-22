@@ -9,7 +9,9 @@ describe('calculateTableSummaries', () => {
       studentUuid: 'student1',
       firstOperand: 2, 
       secondOperand: 3,
-      attemptedAt: new Date(2000, 1, 1, 13).toDateString()
+      attemptedAt: {
+        date: new Date(2000, 1, 1, 13).toDateString()
+      }
     }
 
     const attempts: Attempt[] = [
@@ -17,7 +19,9 @@ describe('calculateTableSummaries', () => {
       { id: 1, ...caseAttempt, correct: false },
       { id: 2, ...caseAttempt, correct: true },
       { id: 3, ...caseAttempt, correct: false, 
-        attemptedAt: new Date(2000, 1, 1, 14).toDateString() 
+        attemptedAt: {
+          date: new Date(2000, 1, 1, 14).toDateString()
+        }
       },
     ];
 

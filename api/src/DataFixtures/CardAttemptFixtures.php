@@ -14,13 +14,19 @@ class CardAttemptFixtures extends Fixture
     {
         $users = array_map(fn(int $id): Uuid => Uuid::v7(), range(1, 5));
 
+        $dateCategories = [
+            new \DateTimeImmutable('-2 days'),    // current week
+            new \DateTimeImmutable('-14 days'),   // past month
+            new \DateTimeImmutable('-35 days'),   // all time
+        ];
+
+        $randomizer = new Randomizer();
         foreach ($users as $user) {
-            foreach(range(1, 10) as $operand1) {
-                foreach(range(1, 10) as $operand2) {
-                    $attempts = new Randomizer()->getInt(0, 3);
-                    foreach(range(1, $attempts) as $attempt) {
-                        $result = new Randomizer()->getFloat(0.0, 1.0) > 0.2;
-                        $attempt = new CardAttempt($user, new \DateTimeImmutable()->add(\DateInterval::createFromDateString($attempt.' days')), $operand1, $operand2, $result);
+            foreach (range(1, 12) as $operand1) {
+                foreach (range(1, 12) as $operand2) {
+                    foreach ($dateCategories as $i => $date) {
+                        $correct = $randomizer->getFloat(0.0, 1.0) > 0.5;
+                        $attempt = new CardAttempt($user, $date, $operand1, $operand2, $correct);
                         $manager->persist($attempt);
                     }
                 }

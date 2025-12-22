@@ -17,6 +17,7 @@ const CELL_VARIANT = {
 type CellVariant = (typeof CELL_VARIANT)[keyof typeof CELL_VARIANT];
 
 type Props = {
+  label: string;
   status: CellStatus;
   variant: CellVariant;
 };
@@ -60,12 +61,19 @@ const getBackgroundColor = (status: CellStatus): string => {
 };
 
 function CellFluency({
+  label,
   status,
   variant = CELL_VARIANT.CELL_NORMAL_SIZE,
 }: Props): React.ReactNode {
   const backgroundColor = getBackgroundColor(status);
 
-  return <StyledCell variant={variant} bgColor={backgroundColor} />;
+  return (
+    <StyledCell 
+      aria-label={label} 
+      variant={variant} 
+      bgColor={backgroundColor} 
+    />
+  );
 }
 
 export default CellFluency;

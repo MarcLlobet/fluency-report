@@ -52,6 +52,7 @@ const getCellStatus = ({
   return isInProgress ? "inProgress" : "notSeen";
 }
 function ProgressTable({ attempts }: Props): React.ReactNode {
+  
   const tableSummaries = useMemo(
     () => calculateTableSummaries(attempts),
     [attempts]
@@ -72,8 +73,11 @@ function ProgressTable({ attempts }: Props): React.ReactNode {
           <TableRow key={summary.firstOperand}>
             <TableHeader>{summary.firstOperand}</TableHeader>
             {summary.secondOperands.map((secondOperand) => (
-              <TableCell key={secondOperand.key}>
+              <TableCell 
+                key={`${summary.firstOperand}-${secondOperand.key}`}
+              >
                 <CellFluency
+                  label={`${summary.firstOperand} x ${secondOperand.secondOperand}`}
                   status={getCellStatus(secondOperand)}
                   variant="cell-small-size"
                 />
