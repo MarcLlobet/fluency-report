@@ -22,7 +22,7 @@ const StudentsInfoWrapper = styled.div`
 
 const isProd = import.meta.env.PROD;
 const url = isProd 
-  ? './attempts.json' 
+  ? `${import.meta.env.BASE_URL}attempts.json`
   : 'http://localhost:8080/attempts';
 
 export function MainLayout(): React.ReactNode {
